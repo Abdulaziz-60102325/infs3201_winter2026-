@@ -1,0 +1,17 @@
+[
+    { "shiftId": "S001", "date": "2026-02-01", "startTime": "08:00", "endTime": "14:00" },
+    { "shiftId": "S002", "date": "2026-02-01", "startTime": "14:00", "endTime": "20:00" },
+
+    { "shiftId": "S003", "date": "2026-02-02", "startTime": "09:00", "endTime": "15:00" },
+    { "shiftId": "S004", "date": "2026-02-02", "startTime": "15:00", "endTime": "21:00" },
+
+    { "shiftId": "S005", "date": "2026-02-03", "startTime": "07:00", "endTime": "13:00" },
+    { "shiftId": "S006", "date": "2026-02-03", "startTime": "13:00", "endTime": "19:00" },
+
+    { "shiftId": "S007", "date": "2026-02-04", "startTime": "10:00", "endTime": "16:00" },
+    { "shiftId": "S008", "date": "2026-02-04", "startTime": "16:00", "endTime": "22:00" },
+
+    { "shiftId": "S009", "date": "2026-02-05", "startTime": "11:00", "endTime": "17:00" },
+    { "shiftId": "S010", "date": "2026-02-05", "startTime": "17:00", "endTime": "23:00" }
+]
+
