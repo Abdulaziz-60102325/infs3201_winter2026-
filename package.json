@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "promises": "^0.2.5",
     "prompt-sync": "^4.2.0"
   }
 }
