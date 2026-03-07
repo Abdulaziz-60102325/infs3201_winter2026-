@@ -5,29 +5,33 @@ const { connectDB, getDB } = require('./db.js');
 
 
 async function getEmployeeData() {
-    const database = await connectDB();
-    return await database.collection('employees').find({}).toArray();
+    await connectDB();
+    const db = getDB();
+    return await db.collection('employees').find({}).toArray();
 }
 
 
 async function getEmployeeById(employeeId) {
-    const database = await connectDB();
-    return await database.collection('employees').findOne({ employeeId: employeeId });
+    await connectDB();
+    const db = getDB();
+    return await db.collection('employees').findOne({ employeeId: employeeId });
 }
 
 /**
  * Retrieves all shift documents from the shifts collection.
- * @returns {Promise<Array<{shiftId: string, date: string, startTime: string, endTime: string}>>} Array of all shift objects.
+ * @returns {Promise<Array>} Array of all shift objects.
  */
 async function getShiftData() {
-    const database = await connectDB();
-    return await database.collection('shifts').find({}).toArray();
+    await connectDB();
+    const db = getDB();
+    return await db.collection('shifts').find({}).toArray();
 }
 
 
 async function updateEmployee(employeeId, name, phone) {
-    const database = await connectDB();
-    await database.collection('employees').updateOne(
+    await connectDB();
+    const db = getDB();
+    await db.collection('employees').updateOne(
         { employeeId: employeeId },
         { $set: { name: name, phone: phone } }
     );
@@ -35,24 +39,30 @@ async function updateEmployee(employeeId, name, phone) {
 
 
 async function addNewEmployee(name, phone) {
-    const database = await connectDB();
-    const employees = await getEmployeeData();
+    await connectDB();
+    const db = getDB();
+    
+    // Find the latest employee to get the highest ID
+    const lastEmployee = await db.collection('employees')
+        .find({})
+        .sort({ employeeId: -1 })
+        .limit(1)
+        .toArray();
+    
     let highestId = 0;
-
-    for (let emp of employees) {
-        let idNumber = parseInt(emp.employeeId.substring(1));
-        if (idNumber > highestId) {
-            highestId = idNumber;
-        }
+    if (lastEmployee.length > 0) {
+        highestId = parseInt(lastEmployee[0].employeeId.substring(1));
     }
 
-    let newId = 'E' + String(highestId + 1).padStart(3, '0');
+    const newId = 'E' + String(highestId + 1).padStart(3, '0');
 
-    await database.collection('employees').insertOne({
+    await db.collection('employees').insertOne({
         employeeId: newId,
         name: name,
         phone: phone
     });
+    
+    return newId;
 }
 
 
@@ -64,3 +74,4 @@ module.exports = {
     updateEmployee,
     addNewEmployee
 };
+
