@@ -1,3 +1,9 @@
+<style>
+    .morning {
+        background-color: yellow;
+    }
+</style>
+
 <h1>Employee Details</h1>
 
 <div>
@@ -20,7 +26,7 @@
     </thead>
     <tbody>
         {{#each shifts}}
-        <tr>
+        <tr class="{{#if isMorning}}morning{{/if}}">
             <td>{{date}}</td>
             <td>{{startTime}}</td>
             <td>{{endTime}}</td>
@@ -31,3 +37,4 @@
 {{else}}
 <p>No shifts assigned to this employee.</p>
 {{/if}}
+

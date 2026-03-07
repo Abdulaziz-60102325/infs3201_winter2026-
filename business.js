@@ -16,6 +16,11 @@ async function createNewEmployee(name, phoneNumber) {
 async function getShiftsForEmployee(id) {
     const shifts = await persistence.getShiftsForEmployee(id);
     
+    // Process shifts to add morning flag and sort
+    shifts.forEach(shift => {
+        shift.isMorning = shift.startTime < "12:00";
+    });
+
     // Sort shifts by date and then by startTime (oldest to newest)
     shifts.sort((a, b) => {
         if (a.date !== b.date) {
@@ -33,5 +38,3 @@ module.exports = {
     createNewEmployee,
     getShiftsForEmployee
 };
-
-

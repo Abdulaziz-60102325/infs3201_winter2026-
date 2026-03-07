@@ -17,10 +17,7 @@ async function getEmployeeById(employeeId) {
     return await db.collection('employees').findOne({ employeeId: employeeId });
 }
 
-/**
- * Retrieves all shift documents from the shifts collection.
- * @returns {Promise<Array>} Array of all shift objects.
- */
+
 async function getShiftData() {
     await connectDB();
     const db = getDB();
@@ -42,7 +39,6 @@ async function addNewEmployee(name, phone) {
     await connectDB();
     const db = getDB();
     
-    // Find the latest employee to get the highest ID
     const lastEmployee = await db.collection('employees')
         .find({})
         .sort({ employeeId: -1 })
