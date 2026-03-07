@@ -1,8 +1,7 @@
 'use strict';
 
 const { connectDB, getDB } = require('./db.js');
-
-
+const { ObjectId } = require('mongodb');
 
 /**
  * Get all employees data
@@ -15,14 +14,14 @@ async function getEmployeeData() {
 }
 
 /**
- * Get employee by ID
- * @param {string} employeeId
+ * Get employee by (_id)
+ * @param {string} id
  * @returns {Promise<object|null>}
  */
-async function getEmployeeById(employeeId) {
+async function getEmployeeById(id) {
     await connectDB();
     const db = getDB();
-    return await db.collection('employees').findOne({ employeeId: employeeId });
+    return await db.collection('employees').findOne({ _id: new ObjectId(id) });
 }
 
 /**
@@ -37,91 +36,69 @@ async function getShiftData() {
 
 /**
  * Update an existing employee
- * @param {string} employeeId
+ * @param {string} id
  * @param {string} name
  * @param {string} phone
  * @returns {Promise<void>}
  */
-async function updateEmployee(employeeId, name, phone) {
+async function updateEmployee(id, name, phone) {
     await connectDB();
     const db = getDB();
     await db.collection('employees').updateOne(
-        { employeeId: employeeId },
+        { _id: new ObjectId(id) },
         { $set: { name: name, phone: phone } }
     );
 }
 
 /**
- * Add a new employee with auto-generated ID
+ * Add a new employee
  * @param {string} name
  * @param {string} phone
- * @returns {Promise<string>} The new employee's ID
+ * @returns {Promise<string>} 
  */
 async function addNewEmployee(name, phone) {
     await connectDB();
     const db = getDB();
     
-    const lastEmployee = await db.collection('employees')
-        .find({})
-        .sort({ employeeId: -1 })
-        .limit(1)
-        .toArray();
-    
-    let highestId = 0;
-    if (lastEmployee.length > 0) {
-        highestId = parseInt(lastEmployee[0].employeeId.substring(1));
-    }
-
-    const newId = 'E' + String(highestId + 1).padStart(3, '0');
-
-    await db.collection('employees').insertOne({
-        employeeId: newId,
+    const result = await db.collection('employees').insertOne({
         name: name,
         phone: phone
     });
     
-    return newId;
+    return result.insertedId.toString();
 }
 
 /**
  * Get all shifts assigned to a specific employee
- * @param {string} empID
+ * @param {string} empID - Employee's _id
  * @returns {Promise<Array>}
  */
 async function getShiftsForEmployee(empID) {
     await connectDB();
     const db = getDB();
 
-    const employee = await db.collection('employees').findOne({ employeeId: empID });
-    if (!employee) return [];
-
-    // Find all shifts where this employee's _id is in the employees array
+    // In the new model, we search in the shifts collection for the employee's ObjectId
     const schedule = await db.collection('shifts').find({
-        employees: employee._id
+        employees: new ObjectId(empID)
     }).toArray();
 
     return schedule;
 }
 
 /**
- * Assign an employee to a shift by updating the shift document's employees array
+ * Assign an employee to a shift
  * @param {string} shiftID - The ObjectId of the shift
- * @param {string} employeeId - The employeeId (e.g. E001)
+ * @param {string} empID - The ObjectId of the employee
  * @returns {Promise<void>}
  */
-async function assignEmployeeToShift(shiftID, employeeId) {
+async function assignEmployeeToShift(shiftID, empID) {
     await connectDB();
     const db = getDB();
-    const { ObjectId } = require('mongodb');
-
-    // Find the employee's _id first
-    const employee = await db.collection('employees').findOne({ employeeId: employeeId });
-    if (!employee) throw new Error("Employee not found");
 
     // $addToSet ensures no duplicates
     await db.collection('shifts').updateOne(
         { _id: new ObjectId(shiftID) },
-        { $addToSet: { employees: employee._id } }
+        { $addToSet: { employees: new ObjectId(empID) } }
     );
 }
 

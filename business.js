@@ -1,6 +1,5 @@
 const persistence = require('./Persistence.js');
 
-
 /**
  * Get list of all employees
  * @returns {Promise<Array>}
@@ -9,62 +8,59 @@ async function getAllEmployees() {
     const employees = await persistence.getEmployeeData();
     return employees.map(e => ({
         ...e,
-        id: e.employeeId || e._id.toString(),
-        employeeId: e.employeeId || e._id.toString()
+        id: e._id.toString()
     }));
 }
 
-
 /**
- * Get a single employee by ID
+ * Get a single employee by ID (_id)
  * @param {string} id
  * @returns {Promise<object|null>}
  */
 async function getEmployeeById(id) {
     const employee = await persistence.getEmployeeById(id);
     if(employee) {
-        employee.id = employee.employeeId || employee._id.toString();
+        employee.id = employee._id.toString();
     }
     return employee;
 }
-
 
 /**
  * Create a new employee
  * @param {string} name
  * @param {string} phoneNumber
- * @returns {Promise<string>} New employee ID
+ * @returns {Promise<string>} New employee _id string
  */
 async function createNewEmployee(name, phoneNumber) {
     return await persistence.addNewEmployee(name, phoneNumber);
 }
 
 /**
- * Get all shifts for an employee, sorted chronologically and flagged as morning if applicable
- * @param {string} id
+ * Get all shifts for an employee
+ * @param {string} id - Employee _id
  * @returns {Promise<Array>}
  */
 async function getShiftsForEmployee(id) {
-    const shifts = await persistence.getShiftsForEmployee(id);
+    const shiftsForEmp = await persistence.getShiftsForEmployee(id);
     
-    // Process shifts to add morning flag and sort
-    shifts.forEach(shift => {
+    // Process shifts
+    shiftsForEmp.forEach(shift => {
         shift.isMorning = shift.startTime < "12:00";
     });
 
-    // Sort shifts by date and then by startTime (oldest to newest)
-    shifts.sort((a, b) => {
+    // Sort chronologically
+    shiftsForEmp.sort((a, b) => {
         if (a.date !== b.date) {
             return a.date.localeCompare(b.date);
         }
         return a.startTime.localeCompare(b.startTime);
     });
 
-    return shifts;
+    return shiftsForEmp;
 }
 
 /**
- * Update an employee's name and phone
+ * Update an employee
  * @param {string} id
  * @param {string} name
  * @param {string} phone
@@ -75,13 +71,13 @@ async function updateEmployee(id, name, phone) {
 }
 
 /**
- * Assign an employee to a shift
+ * Assign employee to shift
  * @param {string} shiftId
- * @param {string} employeeId
+ * @param {string} empId
  * @returns {Promise<void>}
  */
-async function assignEmployeeToShift(shiftId, employeeId) {
-    return await persistence.assignEmployeeToShift(shiftId, employeeId);
+async function assignEmployeeToShift(shiftId, empId) {
+    return await persistence.assignEmployeeToShift(shiftId, empId);
 }
 
 module.exports = {
