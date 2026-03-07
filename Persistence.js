@@ -92,32 +92,38 @@ async function getShiftsForEmployee(empID) {
     await connectDB();
     const db = getDB();
 
-    const schedule = await db.collection('assignments').aggregate([
-        { $match: { employeeId: empID } },
-        {
-            $lookup: {
-                from: 'shifts',
-                localField: 'shiftId',
-                foreignField: 'shiftId',
-                as: 'shiftDetails'
-            }
-        },
-        { $unwind: '$shiftDetails' },
-        {
-            $project: {
-                _id: 0,
-                shiftId: '$shiftDetails.shiftId',
-                date: '$shiftDetails.date',
-                startTime: '$shiftDetails.startTime',
-                endTime: '$shiftDetails.endTime'
-            }
-        }
-    ]).toArray();
+    const employee = await db.collection('employees').findOne({ employeeId: empID });
+    if (!employee) return [];
+
+    // Find all shifts where this employee's _id is in the employees array
+    const schedule = await db.collection('shifts').find({
+        employees: employee._id
+    }).toArray();
 
     return schedule;
 }
 
+/**
+ * Assign an employee to a shift by updating the shift document's employees array
+ * @param {string} shiftID - The ObjectId of the shift
+ * @param {string} employeeId - The employeeId (e.g. E001)
+ * @returns {Promise<void>}
+ */
+async function assignEmployeeToShift(shiftID, employeeId) {
+    await connectDB();
+    const db = getDB();
+    const { ObjectId } = require('mongodb');
 
+    // Find the employee's _id first
+    const employee = await db.collection('employees').findOne({ employeeId: employeeId });
+    if (!employee) throw new Error("Employee not found");
+
+    // $addToSet ensures no duplicates
+    await db.collection('shifts').updateOne(
+        { _id: new ObjectId(shiftID) },
+        { $addToSet: { employees: employee._id } }
+    );
+}
 
 module.exports = {
     connectDB,
@@ -126,6 +132,6 @@ module.exports = {
     getShiftData,
     updateEmployee,
     addNewEmployee,
-    getShiftsForEmployee
+    getShiftsForEmployee,
+    assignEmployeeToShift
 };
-

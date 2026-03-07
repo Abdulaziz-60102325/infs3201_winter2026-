@@ -74,10 +74,21 @@ async function updateEmployee(id, name, phone) {
     return await persistence.updateEmployee(id, name, phone);
 }
 
+/**
+ * Assign an employee to a shift
+ * @param {string} shiftId
+ * @param {string} employeeId
+ * @returns {Promise<void>}
+ */
+async function assignEmployeeToShift(shiftId, employeeId) {
+    return await persistence.assignEmployeeToShift(shiftId, employeeId);
+}
+
 module.exports = {
     getAllEmployees,
     getEmployeeById,
     createNewEmployee,
     getShiftsForEmployee,
-    updateEmployee
+    updateEmployee,
+    assignEmployeeToShift
 };
