@@ -1,10 +1,10 @@
 'use strict';
 
 const persistence = require('./Persistence.js');
+const crypto = require('crypto');
 
 /**
  * Get list of all employees
- * Maps _id to id for easier use in views
  * @returns {Promise<Array>}
  */
 async function getAllEmployees() {
@@ -30,10 +30,9 @@ async function getEmployeeById(id) {
 
 /**
  * Create a new employee
- * No longer requires manual employeeId (e.g. E001)
  * @param {string} name
  * @param {string} phoneNumber
- * @returns {Promise<string>} The new employee's _id as string
+ * @returns {Promise<string>} 
  */
 async function createNewEmployee(name, phoneNumber) {
     return await persistence.addNewEmployee(name, phoneNumber);
@@ -41,8 +40,7 @@ async function createNewEmployee(name, phoneNumber) {
 
 /**
  * Get all shifts for an employee, sorted chronologically and flagged as morning if applicable
- * Uses the new embedded model: find shifts that include the employee's ObjectId
- * @param {string} id - Employee _id
+ * @param {string} id
  * @returns {Promise<Array>}
  */
 async function getShiftsForEmployee(id) {
@@ -85,11 +83,26 @@ async function assignEmployeeToShift(shiftId, empId) {
     return await persistence.assignEmployeeToShift(shiftId, empId);
 }
 
+/**
+ * Authenticate user by username and password
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<boolean>}
+ */
+async function authenticateUser(username, password) {
+    const user = await persistence.getUserByUsername(username);
+    if (!user) return false;
+
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    return hashedPassword === user.password;
+}
+
 module.exports = {
     getAllEmployees,
     getEmployeeById,
     createNewEmployee,
     getShiftsForEmployee,
     updateEmployee,
-    assignEmployeeToShift
+    assignEmployeeToShift,
+    authenticateUser
 };

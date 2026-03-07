@@ -15,14 +15,13 @@ async function getEmployeeData() {
 
 /**
  * Get employee by (_id)
- * @param {string} id - The hex string of the ObjectId
+ * @param {string} id 
  * @returns {Promise<object|null>}
  */
 async function getEmployeeById(id) {
     if (!id) return null;
     await connectDB();
     const db = getDB();
-    // Use mongodb.ObjectId as requested in the instructions
     const empObjectId = new mongodb.ObjectId(id);
     return await db.collection('employees').findOne({ _id: empObjectId });
 }
@@ -38,7 +37,6 @@ async function getShiftData() {
 }
 
 /**
- * Update an existing employee using _id
  * @param {string} id
  * @param {string} name
  * @param {string} phone
@@ -56,10 +54,9 @@ async function updateEmployee(id, name, phone) {
 }
 
 /**
- * Add a new employee (No longer needs manual employeeId)
  * @param {string} name
  * @param {string} phone
- * @returns {Promise<string>} The new employee's _id as string
+ * @returns {Promise<string>} 
  */
 async function addNewEmployee(name, phone) {
     await connectDB();
@@ -75,8 +72,7 @@ async function addNewEmployee(name, phone) {
 
 /**
  * Get all shifts assigned to a specific employee
- * Uses the new embedded model: find shifts where 'employees' array contains the employee's ObjectId
- * @param {string} empID - Employee's _id hex string
+ * @param {string} empID 
  * @returns {Promise<Array>}
  */
 async function getShiftsForEmployee(empID) {
@@ -86,7 +82,6 @@ async function getShiftsForEmployee(empID) {
 
     const empObjectId = new mongodb.ObjectId(empID);
     
-    // As per instructions: find shifts where employees contains employeeId (ObjectId)
     const schedule = await db.collection('shifts').find({
         employees: empObjectId
     }).toArray();
@@ -95,9 +90,8 @@ async function getShiftsForEmployee(empID) {
 }
 
 /**
- * Assign an employee to a shift by adding their ObjectId to the employees array
- * @param {string} shiftID - The ObjectId of the shift
- * @param {string} empID - The ObjectId of the employee
+ * @param {string} shiftID 
+ * @param {string} empID 
  * @returns {Promise<void>}
  */
 async function assignEmployeeToShift(shiftID, empID) {
@@ -108,11 +102,21 @@ async function assignEmployeeToShift(shiftID, empID) {
     const shiftObjectId = new mongodb.ObjectId(shiftID);
     const empObjectId = new mongodb.ObjectId(empID);
 
-    // $addToSet ensures no duplicates
     await db.collection('shifts').updateOne(
         { _id: shiftObjectId },
         { $addToSet: { employees: empObjectId } }
     );
+}
+
+/**
+ * Get user by username
+ * @param {string} username
+ * @returns {Promise<object|null>}
+ */
+async function getUserByUsername(username) {
+    await connectDB();
+    const db = getDB();
+    return await db.collection('users').findOne({ username: username });
 }
 
 module.exports = {
@@ -123,5 +127,6 @@ module.exports = {
     updateEmployee,
     addNewEmployee,
     getShiftsForEmployee,
-    assignEmployeeToShift
+    assignEmployeeToShift,
+    getUserByUsername
 };
