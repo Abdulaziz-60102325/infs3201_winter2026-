@@ -104,5 +104,9 @@ module.exports = {
     getShiftsForEmployee,
     updateEmployee,
     assignEmployeeToShift,
-    authenticateUser
+    authenticateUser,
+    createSession: persistence.createInternalSession,
+    getSession: persistence.getInternalSession,
+    extendSession: persistence.extendInternalSession,
+    deleteSession: persistence.deleteInternalSession
 };

@@ -1,6 +1,6 @@
 const express = require("express");
 const exphbs = require("express-handlebars");
-const session = require("express-session");
+const cookieParser = require("cookie-parser");
 const { connectDB } = require("./db.js");
 const app = express();
 
@@ -9,7 +9,11 @@ const {
     getEmployeeById, 
     getShiftsForEmployee, 
     updateEmployee,
-    authenticateUser 
+    authenticateUser,
+    createSession,
+    getSession,
+    extendSession,
+    deleteSession
 } = require("./business.js");
 
 app.engine("handlebars", exphbs.engine());
@@ -17,19 +21,26 @@ app.set("view engine", "handlebars");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cookieParser());
 
-app.use(session({
-    secret: "infs3201_secret_key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false } // Set to true if using https
-}));
-
-// Auth Middleware
-const isAuthenticated = (req, res, next) => {
-    if (req.session && req.session.user) {
+// Custom Session Middleware
+const sessionMiddleware = async (req, res, next) => {
+    // List of public routes
+    const publicRoutes = ["/login", "/logout"];
+    if (publicRoutes.includes(req.path)) {
         return next();
     }
+
+    const sessionId = req.cookies.session_id;
+    if (sessionId) {
+        const session = await getSession(sessionId);
+        if (session) {
+            await extendSession(sessionId);
+            req.user = session.username;
+            return next();
+        }
+    }
+
     res.redirect("/login");
 };
 
@@ -37,8 +48,12 @@ connectDB().then(() => app.listen(3000, () => console.log("Server on port 3000")
 ).catch(err => console.error("Failed to connect to MongoDB", err));
 
 // Login Routes
-app.get("/login", (req, res) => {
-    if (req.session.user) return res.redirect("/");
+app.get("/login", async (req, res) => {
+    const sessionId = req.cookies.session_id;
+    if (sessionId) {
+        const session = await getSession(sessionId);
+        if (session) return res.redirect("/");
+    }
     res.render("login", { error: req.query.error });
 });
 
@@ -47,24 +62,27 @@ app.post("/login", async (req, res) => {
     const isValid = await authenticateUser(username, password);
 
     if (isValid) {
-        req.session.user = { username };
+        const sessionId = await createSession(username);
+        res.cookie('session_id', sessionId, { httpOnly: true });
         res.redirect("/");
     } else {
         res.redirect("/login?error=Invalid username or password");
     }
 });
 
-app.get("/logout", (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error("Error destroying session:", err);
-        }
-        res.clearCookie('connect.sid');
-        res.redirect("/login");
-    });
+app.get("/logout", async (req, res) => {
+    const sessionId = req.cookies.session_id;
+    if (sessionId) {
+        await deleteSession(sessionId);
+    }
+    res.clearCookie('session_id');
+    res.redirect("/login");
 });
 
-app.get("/", isAuthenticated, async (req, res) => {
+// Protect all following routes
+app.use(sessionMiddleware);
+
+app.get("/", async (req, res) => {
     try {
         const employees = await getAllEmployees();
         res.render("employees", { employees });
@@ -73,7 +91,7 @@ app.get("/", isAuthenticated, async (req, res) => {
     }
 });
 
-app.get("/employee/:id", isAuthenticated, async (req, res) => {
+app.get("/employee/:id", async (req, res) => {
     try {
         const employee = await getEmployeeById(req.params.id);
         if (!employee) {
@@ -90,7 +108,7 @@ app.get("/employee/:id", isAuthenticated, async (req, res) => {
     }
 });
 
-app.get("/employee/:id/edit", isAuthenticated, async (req, res) => {
+app.get("/employee/:id/edit", async (req, res) => {
     try {
         const employee = await getEmployeeById(req.params.id);
         if (!employee) {
@@ -102,7 +120,7 @@ app.get("/employee/:id/edit", isAuthenticated, async (req, res) => {
     }
 });
 
-app.post("/employee/:id/edit", isAuthenticated, async (req, res) => {
+app.post("/employee/:id/edit", async (req, res) => {
     try {
         let name = req.body.name.trim();
         let phone = req.body.phone.trim();
@@ -119,4 +137,3 @@ app.post("/employee/:id/edit", isAuthenticated, async (req, res) => {
         res.status(500).send("Error updating employee");
     }
 });
-

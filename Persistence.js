@@ -119,6 +119,48 @@ async function getUserByUsername(username) {
     return await db.collection('users').findOne({ username: username });
 }
 
+async function createInternalSession(username) {
+    await connectDB();
+    const db = getDB();
+    const crypto = require('crypto');
+    const sessionId = crypto.randomBytes(24).toString('hex');
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await db.collection('sessions').insertOne({
+        sessionId,
+        username,
+        expiry
+    });
+    return sessionId;
+}
+
+async function getInternalSession(sessionId) {
+    await connectDB();
+    const db = getDB();
+    const session = await db.collection('sessions').findOne({ sessionId });
+    
+    if (session && session.expiry > new Date()) {
+        return session;
+    }
+    return null;
+}
+
+async function extendInternalSession(sessionId) {
+    await connectDB();
+    const db = getDB();
+    const newExpiry = new Date(Date.now() + 5 * 60 * 1000);
+    await db.collection('sessions').updateOne(
+        { sessionId },
+        { $set: { expiry: newExpiry } }
+    );
+}
+
+async function deleteInternalSession(sessionId) {
+    await connectDB();
+    const db = getDB();
+    await db.collection('sessions').deleteOne({ sessionId });
+}
+
 module.exports = {
     connectDB,
     getEmployeeData,
@@ -128,5 +170,9 @@ module.exports = {
     addNewEmployee,
     getShiftsForEmployee,
     assignEmployeeToShift,
-    getUserByUsername
+    getUserByUsername,
+    createInternalSession,
+    getInternalSession,
+    extendInternalSession,
+    deleteInternalSession
 };
