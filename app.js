@@ -11,15 +11,8 @@ app.set("view engine", "handlebars");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-connectDB().then(() => {
-    console.log("Connected to MongoDB ");
-    
-    app.listen(3000, () => {
-        console.log("Server on port 3000");
-    });
-}).catch(err => {
-    console.error("Failed to connect to MongoDB", err);
-});
+connectDB().then(() => app.listen(3000, () => console.log("Server on port 3000"))
+).catch(err => console.error("Failed to connect to MongoDB", err));
 
 app.get("/", async (req, res) => {
     try {
