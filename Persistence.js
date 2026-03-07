@@ -4,27 +4,44 @@ const { connectDB, getDB } = require('./db.js');
 
 
 
+/**
+ * Get all employees data
+ * @returns {Promise<Array>}
+ */
 async function getEmployeeData() {
     await connectDB();
     const db = getDB();
     return await db.collection('employees').find({}).toArray();
 }
 
-
+/**
+ * Get employee by ID
+ * @param {string} employeeId
+ * @returns {Promise<object|null>}
+ */
 async function getEmployeeById(employeeId) {
     await connectDB();
     const db = getDB();
     return await db.collection('employees').findOne({ employeeId: employeeId });
 }
 
-
+/**
+ * Get all shifts data
+ * @returns {Promise<Array>}
+ */
 async function getShiftData() {
     await connectDB();
     const db = getDB();
     return await db.collection('shifts').find({}).toArray();
 }
 
-
+/**
+ * Update an existing employee
+ * @param {string} employeeId
+ * @param {string} name
+ * @param {string} phone
+ * @returns {Promise<void>}
+ */
 async function updateEmployee(employeeId, name, phone) {
     await connectDB();
     const db = getDB();
@@ -34,7 +51,12 @@ async function updateEmployee(employeeId, name, phone) {
     );
 }
 
-
+/**
+ * Add a new employee with auto-generated ID
+ * @param {string} name
+ * @param {string} phone
+ * @returns {Promise<string>} The new employee's ID
+ */
 async function addNewEmployee(name, phone) {
     await connectDB();
     const db = getDB();
@@ -61,7 +83,11 @@ async function addNewEmployee(name, phone) {
     return newId;
 }
 
-
+/**
+ * Get all shifts assigned to a specific employee
+ * @param {string} empID
+ * @returns {Promise<Array>}
+ */
 async function getShiftsForEmployee(empID) {
     await connectDB();
     const db = getDB();
@@ -90,6 +116,7 @@ async function getShiftsForEmployee(empID) {
 
     return schedule;
 }
+
 
 
 module.exports = {
