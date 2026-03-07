@@ -6,8 +6,14 @@ const persistence = require('./Persistence.js');
  * @returns {Promise<Array>}
  */
 async function getAllEmployees() {
-    return await persistence.getEmployeeData();
+    const employees = await persistence.getEmployeeData();
+    return employees.map(e => ({
+        ...e,
+        id: e.employeeId || e._id.toString(),
+        employeeId: e.employeeId || e._id.toString()
+    }));
 }
+
 
 /**
  * Get a single employee by ID
@@ -15,8 +21,13 @@ async function getAllEmployees() {
  * @returns {Promise<object|null>}
  */
 async function getEmployeeById(id) {
-    return await persistence.getEmployeeById(id);
+    const employee = await persistence.getEmployeeById(id);
+    if(employee) {
+        employee.id = employee.employeeId || employee._id.toString();
+    }
+    return employee;
 }
+
 
 /**
  * Create a new employee
