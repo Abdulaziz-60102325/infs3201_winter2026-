@@ -2,6 +2,8 @@
 
 const { connectDB, getDB } = require('./db.js');
 const mongodb = require('mongodb');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * Get all employees data
@@ -15,7 +17,7 @@ async function getEmployeeData() {
 
 /**
  * Get employee by (_id)
- * @param {string} id 
+ * @param {string} id
  * @returns {Promise<object|null>}
  */
 async function getEmployeeById(id) {
@@ -64,12 +66,12 @@ async function updateEmployee(id, name, phone, photo) {
 async function addNewEmployee(name, phone) {
     await connectDB();
     const db = getDB();
-    
+
     const result = await db.collection('employees').insertOne({
         name: name,
         phone: phone
     });
-    
+
     return result.insertedId.toString();
 }
 
@@ -93,8 +95,6 @@ async function getShiftsForEmployee(empID) {
     return schedule;
 }
 
-
-
 /**
  * Get user by username
  * @param {string} username
@@ -104,6 +104,79 @@ async function getUserByUsername(username) {
     await connectDB();
     const db = getDB();
     return await db.collection('users').findOne({ username: username });
+}
+
+/**
+ * Increment the failed login attempt counter for a user
+ * @param {string} username
+ * @returns {Promise<number>} The updated login attempt count
+ */
+async function incrementLoginAttempts(username) {
+    await connectDB();
+    const db = getDB();
+    const result = await db.collection('users').findOneAndUpdate(
+        { username },
+        { $inc: { loginAttempts: 1 } },
+        { returnDocument: 'after' }
+    );
+    return result.loginAttempts;
+}
+
+/**
+ * Reset the login attempt counter to zero after a successful login
+ * @param {string} username
+ * @returns {Promise<void>}
+ */
+async function resetLoginAttempts(username) {
+    await connectDB();
+    const db = getDB();
+    await db.collection('users').updateOne({ username }, { $set: { loginAttempts: 0 } });
+}
+
+/**
+ * Lock a user account permanently — only unlockable via direct database access
+ * @param {string} username
+ * @returns {Promise<void>}
+ */
+async function lockAccount(username) {
+    await connectDB();
+    const db = getDB();
+    await db.collection('users').updateOne({ username }, { $set: { isLocked: true } });
+}
+
+/**
+ * Store a 2FA verification token for a user with a set expiry
+ * @param {string} username
+ * @param {string} code - 6-digit verification code
+ * @param {Date} expiry - Token expiry date/time
+ * @returns {Promise<void>}
+ */
+async function create2FAToken(username, code, expiry) {
+    await connectDB();
+    const db = getDB();
+    await db.collection('pending_2fa').insertOne({ username, code, expiry });
+}
+
+/**
+ * Retrieve a pending 2FA token for a user
+ * @param {string} username
+ * @returns {Promise<object|null>} The token document or null if not found
+ */
+async function get2FAToken(username) {
+    await connectDB();
+    const db = getDB();
+    return await db.collection('pending_2fa').findOne({ username });
+}
+
+/**
+ * Delete all pending 2FA tokens for a user
+ * @param {string} username
+ * @returns {Promise<void>}
+ */
+async function delete2FAToken(username) {
+    await connectDB();
+    const db = getDB();
+    await db.collection('pending_2fa').deleteMany({ username });
 }
 
 /**
@@ -187,6 +260,39 @@ async function logSecurityEvent(event) {
     });
 }
 
+/**
+ * List all document filenames for an employee from the filesystem
+ * @param {string} employeeId
+ * @returns {Array<string>} Array of filenames
+ */
+function getEmployeeDocuments(employeeId) {
+    const dir = path.join('uploads', 'employee-docs', employeeId);
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir);
+}
+
+/**
+ * Count the number of documents uploaded for an employee
+ * @param {string} employeeId
+ * @returns {number}
+ */
+function countEmployeeDocuments(employeeId) {
+    return getEmployeeDocuments(employeeId).length;
+}
+
+/**
+ * Delete a specific document from the filesystem
+ * @param {string} employeeId
+ * @param {string} filename
+ * @returns {void}
+ */
+function deleteEmployeeDocument(employeeId, filename) {
+    const filePath = path.join('uploads', 'employee-docs', employeeId, filename);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+}
+
 module.exports = {
     connectDB,
     getEmployeeData,
@@ -196,9 +302,18 @@ module.exports = {
     addNewEmployee,
     getShiftsForEmployee,
     getUserByUsername,
+    incrementLoginAttempts,
+    resetLoginAttempts,
+    lockAccount,
+    create2FAToken,
+    get2FAToken,
+    delete2FAToken,
     createInternalSession,
     getInternalSession,
     extendInternalSession,
     deleteInternalSession,
-    logSecurityEvent
+    logSecurityEvent,
+    getEmployeeDocuments,
+    countEmployeeDocuments,
+    deleteEmployeeDocument
 };

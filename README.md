@@ -1,4 +1,4 @@
-# INFS3201 – Assignment 4
+# INFS3201 – Assignment 5
 ## Employee Scheduling System
 
 ### GitHub Repository
@@ -19,12 +19,36 @@ The server starts on **http://localhost:3000**
 
 ## Test User Accounts
 
-| Username | Password   |
-|----------|-----------|
-| admin    | admin123  |
-| user1    | pass1234  |
+| Username | Password  | Email               |
+|----------|-----------|---------------------|
+| admin    | admin123  | admin@example.com   |
+| user1    | pass1234  | user1@example.com   |
 
-> **Note to evaluator:** If the above credentials do not work, please check the `users` collection in MongoDB Compass under the `infs3201_winter2026` database for the current usernames. Passwords are stored as SHA-256 hashes.
+> **Note to evaluator:** Passwords are stored as SHA-256 hashes in the `users` collection.
+> The **2FA code** is printed to the **server console** (terminal) — look for the `EMAIL SENT` block after login.
+
+---
+
+## Assignment 5 — New Features
+
+### Two-Factor Authentication (2FA)
+- After entering correct username/password, a **6-digit code** is generated and "sent" (printed to console)
+- A 2FA code entry page is shown — the session is **not created** until this step is passed
+- The 2FA code expires in **3 minutes**
+- After **3 failed login attempts**: a suspicious activity email alert is printed to console
+- After **10 failed login attempts**: the account is locked permanently (only unlockable via DB)
+
+### Email System (`emailSystem.js`)
+- All email output goes to `console.log` — check the server terminal
+- Interface designed as if using a real email provider
+- Functions: `send2FACode`, `sendSuspiciousActivityAlert`, `sendAccountLockedNotification`
+
+### Employee Documents
+- Each employee can have up to **5 PDF documents** uploaded
+- PDFs must be **2MB or smaller**
+- Documents are stored in `uploads/employee-docs/{employeeId}/` (not in the database)
+- Documents are **not** served via a public static route — access requires an active session
+- Access the document manager from any employee's detail page → "Manage Documents"
 
 ---
 
@@ -50,23 +74,33 @@ The server starts on **http://localhost:3000**
 - **Employee Photos**: Served from `/public/images/` — access requires active session
 - **Auth Middleware**: Protects all routes except `/login` and `/logout`
 
+### Assignment 5
+- **2FA Authentication**: 6-digit code via email (console), 3-minute expiry
+- **Account Lockout**: Suspicious activity alert at 3 failures, lock at 10 failures
+- **emailSystem.js**: Simulated email layer (console.log, but real interface)
+- **Employee Documents**: PDF upload, 2MB limit, 5-doc cap, protected serving route
+
 ---
 
 ## Project Structure
 
 ```
-├── app.js           # Express server + routes
-├── business.js      # Business logic layer
-├── Persistence.js   # MongoDB persistence layer
-├── db.js            # MongoDB connection
-├── transform_db.js  # A4 one-time migration script
-├── A4_refactor_plan.txt
+├── app.js              # Express server + all routes
+├── business.js         # Business logic layer
+├── Persistence.js      # MongoDB + filesystem persistence layer
+├── emailSystem.js      # Email simulation system (A5)
+├── db.js               # MongoDB connection
+├── transform_db.js     # A4 one-time migration script
 ├── views/
 │   ├── employees.handlebars
 │   ├── employeeDetails.handlebars
 │   ├── editEmployee.handlebars
+│   ├── twoFactor.handlebars      # A5 - 2FA code entry page
+│   ├── documents.handlebars      # A5 - Document manager page
 │   ├── login.handlebars
 │   └── layouts/main.handlebars
-└── public/
-    └── images/      # Employee photos
+├── public/
+│   └── images/         # Employee photos (auth-protected)
+└── uploads/
+    └── employee-docs/  # Employee PDF documents (auth-protected, in .gitignore)
 ```
