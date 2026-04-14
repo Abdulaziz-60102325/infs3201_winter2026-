@@ -75,38 +75,27 @@ async function addNewEmployee(name, phone) {
  * @param {string} empID 
  * @returns {Promise<Array>}
  */
+/**
+ * Get all shifts assigned to a specific employee, sorted by date then start time
+ * @param {string} empID - The employee's MongoDB ObjectId string
+ * @returns {Promise<Array>}
+ */
 async function getShiftsForEmployee(empID) {
     if (!empID) return [];
     await connectDB();
     const db = getDB();
 
     const empObjectId = new mongodb.ObjectId(empID);
-    
-    const schedule = await db.collection('shifts').find({
-        employees: empObjectId
-    }).toArray();
+
+    const schedule = await db.collection('shifts')
+        .find({ employees: empObjectId })
+        .sort({ date: 1, startTime: 1 })
+        .toArray();
 
     return schedule;
 }
 
-/**
- * @param {string} shiftID 
- * @param {string} empID 
- * @returns {Promise<void>}
- */
-async function assignEmployeeToShift(shiftID, empID) {
-    if (!shiftID || !empID) return;
-    await connectDB();
-    const db = getDB();
 
-    const shiftObjectId = new mongodb.ObjectId(shiftID);
-    const empObjectId = new mongodb.ObjectId(empID);
-
-    await db.collection('shifts').updateOne(
-        { _id: shiftObjectId },
-        { $addToSet: { employees: empObjectId } }
-    );
-}
 
 /**
  * Get user by username
@@ -119,6 +108,11 @@ async function getUserByUsername(username) {
     return await db.collection('users').findOne({ username: username });
 }
 
+/**
+ * Create a new session for an authenticated user (5-minute TTL)
+ * @param {string} username
+ * @returns {Promise<string>} The generated session ID
+ */
 async function createInternalSession(username) {
     await connectDB();
     const db = getDB();
@@ -134,17 +128,27 @@ async function createInternalSession(username) {
     return sessionId;
 }
 
+/**
+ * Retrieve a session by ID if it has not expired
+ * @param {string} sessionId
+ * @returns {Promise<object|null>} The session object or null if expired/not found
+ */
 async function getInternalSession(sessionId) {
     await connectDB();
     const db = getDB();
     const session = await db.collection('sessions').findOne({ sessionId });
-    
+
     if (session && session.expiry > new Date()) {
         return session;
     }
     return null;
 }
 
+/**
+ * Extend an existing session by another 5 minutes
+ * @param {string} sessionId
+ * @returns {Promise<void>}
+ */
 async function extendInternalSession(sessionId) {
     await connectDB();
     const db = getDB();
@@ -155,12 +159,25 @@ async function extendInternalSession(sessionId) {
     );
 }
 
+/**
+ * Delete a session (used on logout)
+ * @param {string} sessionId
+ * @returns {Promise<void>}
+ */
 async function deleteInternalSession(sessionId) {
     await connectDB();
     const db = getDB();
     await db.collection('sessions').deleteOne({ sessionId });
 }
 
+/**
+ * Log a security event to the security_log collection
+ * @param {object} event - Event details
+ * @param {string} event.username - Username of the requester (or 'unknown')
+ * @param {string} event.url - The URL accessed
+ * @param {string} event.method - HTTP method used (GET, POST, etc.)
+ * @returns {Promise<void>}
+ */
 async function logSecurityEvent(event) {
     await connectDB();
     const db = getDB();
@@ -180,7 +197,6 @@ module.exports = {
     updateEmployee,
     addNewEmployee,
     getShiftsForEmployee,
-    assignEmployeeToShift,
     getUserByUsername,
     createInternalSession,
     getInternalSession,

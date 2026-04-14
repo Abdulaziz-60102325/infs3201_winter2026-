@@ -43,15 +43,13 @@ async function embedEmployees() {
 async function cleanupLegacyData() {
     const db = getDB();
 
-    console.log("Cleaning up legacy fields and collections...");
+    console.log("Clean up legacy fields and collections...");
 
-    // Remove employeeId from employees
     await db.collection("employees").updateMany(
         {},
         { $unset: { employeeId: "" } }
     );
 
-    // Remove shiftId from shifts
     await db.collection("shifts").updateMany(
         {},
         { $unset: { shiftId: "" } }
@@ -59,9 +57,9 @@ async function cleanupLegacyData() {
 
     try {
         await db.collection("assignments").drop();
-        console.log("Collection 'assignments' dropped.");
+        console.log(" 'assignments' dropped.");
     } catch (e) {
-        console.log("Collection 'assignments' already gone or error dropping.");
+        console.log(" 'assignments' already gone.");
     }
 }
 
@@ -71,9 +69,9 @@ async function runMigration() {
         await createEmployeesArray();
         await embedEmployees();
         await cleanupLegacyData();
-        console.log("Migration completed successfully!");
+        console.log("migrate completed successfully!");
     } catch (err) {
-        console.error("Migration failed:", err);
+        console.error("migrate failed:", err);
     } finally {
         process.exit(0);
     }

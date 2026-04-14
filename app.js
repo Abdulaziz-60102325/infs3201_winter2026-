@@ -23,7 +23,6 @@ app.set("view engine", "handlebars");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static('public'));
 
 
 const sessionMiddleware = async (req, res, next) => {
@@ -60,6 +59,7 @@ const authGuard = (req, res, next) => {
 app.use(sessionMiddleware);
 app.use(securityLogger);
 app.use(authGuard);
+app.use(express.static('public')); // Must be after authGuard so photos require login
 
 connectDB().then(() => app.listen(3000, () => console.log("Server on port 3000"))
 ).catch(err => console.error("Failed to connect to MongoDB", err));

@@ -9,10 +9,18 @@ const crypto = require('crypto');
  */
 async function getAllEmployees() {
     const employees = await persistence.getEmployeeData();
-    return employees.map(e => ({
-        ...e,
-        id: e._id.toString()
-    }));
+    const result = [];
+    for (let i = 0; i < employees.length; i++) {
+        const e = employees[i];
+        result.push({
+            _id: e._id,
+            id: e._id.toString(),
+            name: e.name,
+            phone: e.phone,
+            photo: e.photo
+        });
+    }
+    return result;
 }
 
 /**
@@ -44,20 +52,13 @@ async function createNewEmployee(name, phoneNumber) {
  * @returns {Promise<Array>}
  */
 async function getShiftsForEmployee(id) {
+    // Sorting is handled by MongoDB in the persistence layer
     const shiftsForEmp = await persistence.getShiftsForEmployee(id);
-    
-    // Process shifts
-    shiftsForEmp.forEach(shift => {
-        shift.isMorning = shift.startTime < "12:00";
-    });
 
-    // Sort chronologically (oldest to newest)
-    shiftsForEmp.sort((a, b) => {
-        if (a.date !== b.date) {
-            return a.date.localeCompare(b.date);
-        }
-        return a.startTime.localeCompare(b.startTime);
-    });
+    // Flag morning shifts (before 12:00) using a plain for loop
+    for (let i = 0; i < shiftsForEmp.length; i++) {
+        shiftsForEmp[i].isMorning = shiftsForEmp[i].startTime < "12:00";
+    }
 
     return shiftsForEmp;
 }
@@ -73,15 +74,7 @@ async function updateEmployee(id, name, phone, photo) {
     return await persistence.updateEmployee(id, name, phone, photo);
 }
 
-/**
- * Assign an employee to a shift using the embedded model
- * @param {string} shiftId
- * @param {string} empId
- * @returns {Promise<void>}
- */
-async function assignEmployeeToShift(shiftId, empId) {
-    return await persistence.assignEmployeeToShift(shiftId, empId);
-}
+
 
 /**
  * Authenticate user by username and password
@@ -103,7 +96,6 @@ module.exports = {
     createNewEmployee,
     getShiftsForEmployee,
     updateEmployee,
-    assignEmployeeToShift,
     authenticateUser,
     createSession: persistence.createInternalSession,
     getSession: persistence.getInternalSession,
