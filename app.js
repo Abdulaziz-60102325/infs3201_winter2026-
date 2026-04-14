@@ -53,7 +53,7 @@ const authGuard = (req, res, next) => {
     if (publicRoutes.includes(req.path) || req.sessionUser) {
         return next();
     }
-    res.redirect("/login");
+    res.redirect("/login?error=You must be logged in to access this page");
 };
 
 app.use(sessionMiddleware);
