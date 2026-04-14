@@ -2,7 +2,11 @@
 
 const { connectDB, getDB } = require('./db.js');
 
-
+/**
+ * Step 1: Add an empty 'employees' array field to every shift document.
+ * This prepares the shifts collection for the embedded document model.
+ * @returns {Promise<void>}
+ */
 async function createEmployeesArray() {
     const db = getDB();
     const shifts = db.collection("shifts");
@@ -15,6 +19,12 @@ async function createEmployeesArray() {
 }
 
 
+/**
+ * Step 2: Read all documents from the assignments collection and embed
+ * each employee's ObjectId into the corresponding shift's 'employees' array.
+ * Uses $addToSet to avoid duplicate entries.
+ * @returns {Promise<void>}
+ */
 async function embedEmployees() {
     const db = getDB();
     const assignments = await db.collection("assignments").find().toArray();
@@ -40,6 +50,12 @@ async function embedEmployees() {
 }
 
 
+/**
+ * Step 3: Remove legacy relational fields and drop the assignments collection.
+ * Removes 'employeeId' from employees, 'shiftId' from shifts,
+ * and drops the now-redundant assignments collection entirely.
+ * @returns {Promise<void>}
+ */
 async function cleanupLegacyData() {
     const db = getDB();
 
@@ -63,6 +79,11 @@ async function cleanupLegacyData() {
     }
 }
 
+/**
+ * Entry point: runs the full migration pipeline in order.
+ * Must be executed exactly once after backing up the database.
+ * @returns {Promise<void>}
+ */
 async function runMigration() {
     try {
         await connectDB();

@@ -74,8 +74,6 @@ async function updateEmployee(id, name, phone, photo) {
     return await persistence.updateEmployee(id, name, phone, photo);
 }
 
-
-
 /**
  * Authenticate user by username and password
  * @param {string} username

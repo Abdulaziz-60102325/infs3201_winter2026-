@@ -37,9 +37,11 @@ async function getShiftData() {
 }
 
 /**
- * @param {string} id
- * @param {string} name
- * @param {string} phone
+ * Update an employee's name, phone, and photo by MongoDB ObjectId
+ * @param {string} id - The employee's MongoDB ObjectId string
+ * @param {string} name - The updated name
+ * @param {string} phone - The updated phone number
+ * @param {string} photo - The updated photo filename
  * @returns {Promise<void>}
  */
 async function updateEmployee(id, name, phone, photo) {
@@ -54,9 +56,10 @@ async function updateEmployee(id, name, phone, photo) {
 }
 
 /**
- * @param {string} name
- * @param {string} phone
- * @returns {Promise<string>} 
+ * Add a new employee to the employees collection
+ * @param {string} name - The employee's full name
+ * @param {string} phone - The employee's phone number
+ * @returns {Promise<string>} The new employee's inserted ObjectId as a string
  */
 async function addNewEmployee(name, phone) {
     await connectDB();
@@ -70,11 +73,6 @@ async function addNewEmployee(name, phone) {
     return result.insertedId.toString();
 }
 
-/**
- * Get all shifts assigned to a specific employee
- * @param {string} empID 
- * @returns {Promise<Array>}
- */
 /**
  * Get all shifts assigned to a specific employee, sorted by date then start time
  * @param {string} empID - The employee's MongoDB ObjectId string
