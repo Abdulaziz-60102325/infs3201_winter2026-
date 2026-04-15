@@ -32,7 +32,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Multer storage config: store PDFs in uploads/employee-docs/{employeeId}/
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = path.join('uploads', 'employee-docs', req.params.id);
@@ -45,7 +44,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// Multer upload instance: PDF only, 2MB max
 const upload = multer({
     storage,
     limits: { fileSize: 2 * 1024 * 1024 },
@@ -58,7 +56,6 @@ const upload = multer({
     }
 });
 
-// Middleware: resolve session user from cookie
 const sessionMiddleware = async (req, res, next) => {
     const sessionId = req.cookies.session_id;
     if (sessionId) {
@@ -71,7 +68,6 @@ const sessionMiddleware = async (req, res, next) => {
     next();
 };
 
-// Middleware: log every request to security_log collection
 const securityLogger = async (req, res, next) => {
     await logSecurityEvent({
         username: req.sessionUser || "unknown",
@@ -81,7 +77,6 @@ const securityLogger = async (req, res, next) => {
     next();
 };
 
-// Middleware: protect all routes except public ones
 const authGuard = (req, res, next) => {
     const publicRoutes = ["/login", "/logout", "/2fa"];
     if (publicRoutes.includes(req.path) || req.sessionUser) {
@@ -93,31 +88,28 @@ const authGuard = (req, res, next) => {
 app.use(sessionMiddleware);
 app.use(securityLogger);
 app.use(authGuard);
-app.use(express.static('public')); // Must be after authGuard so photos require login
+app.use(express.static('public')); 
 
 connectDB().then(() => app.listen(3000, () => console.log("Server on port 3000"))
 ).catch(err => console.error("Failed to connect to MongoDB", err));
 
-// ==================== AUTH ROUTES ====================
 
 app.get("/login", async (req, res) => {
     if (req.sessionUser) return res.redirect("/");
     res.render("login", { error: req.query.error });
 });
 
-// POST /login — validates credentials, then hands off to 2FA instead of creating session
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     const result = await authenticateUser(username, password);
 
     if (result === 'LOCKED') {
-        return res.redirect("/login?error=Your account has been locked. Please contact an administrator.");
+        return res.redirect("/login?error=Your account has been locked. Please contact .");
     }
     if (result === 'INVALID') {
         return res.redirect("/login?error=Invalid username or password");
     }
 
-    // Credentials valid — initiate 2FA before creating a session
     await initiate2FA(username);
     res.cookie('pending_2fa_user', username, { httpOnly: true, maxAge: 3 * 60 * 1000 });
     res.redirect("/2fa");
@@ -132,16 +124,13 @@ app.get("/logout", async (req, res) => {
     res.redirect("/login");
 });
 
-// ==================== 2FA ROUTES ====================
 
-// GET /2fa — show the 2FA code entry page
 app.get("/2fa", (req, res) => {
     if (!req.cookies.pending_2fa_user) return res.redirect("/login");
     if (req.sessionUser) return res.redirect("/");
     res.render("twoFactor", { error: req.query.error });
 });
 
-// POST /2fa — verify the submitted code and create a real session if correct
 app.post("/2fa", async (req, res) => {
     const username = req.cookies.pending_2fa_user;
     if (!username) return res.redirect("/login");
@@ -157,14 +146,12 @@ app.post("/2fa", async (req, res) => {
         return res.redirect("/2fa?error=Invalid code. Please try again.");
     }
 
-    // 2FA passed — now create the real session
     const sessionId = await createSession(username);
     res.clearCookie('pending_2fa_user');
     res.cookie('session_id', sessionId, { httpOnly: true });
     res.redirect("/");
 });
 
-// ==================== EMPLOYEE ROUTES ====================
 
 app.get("/", async (req, res) => {
     try {
@@ -223,9 +210,7 @@ app.post("/employee/:id/edit", async (req, res) => {
     }
 });
 
-// ==================== DOCUMENT ROUTES ====================
 
-// GET — list all documents for an employee
 app.get("/employee/:id/documents", async (req, res) => {
     try {
         const employee = await getEmployeeById(req.params.id);
@@ -243,9 +228,7 @@ app.get("/employee/:id/documents", async (req, res) => {
     }
 });
 
-// POST — upload a new document for an employee (PDF only, max 2MB, max 5 total)
 app.post("/employee/:id/documents", (req, res) => {
-    // Check count BEFORE multer saves the file
     const checkResult = canUploadDocument(req.params.id);
     if (checkResult === 'MAX_DOCS') {
         return res.redirect(`/employee/${req.params.id}/documents?error=Maximum of 5 documents allowed per employee`);
@@ -262,7 +245,6 @@ app.post("/employee/:id/documents", (req, res) => {
     });
 });
 
-// GET — serve a document file (PROTECTED — not via express.static)
 app.get("/employee/:id/documents/:filename", (req, res) => {
     const filePath = path.join('uploads', 'employee-docs', req.params.id, req.params.filename);
     if (!fs.existsSync(filePath)) {
@@ -273,7 +255,6 @@ app.get("/employee/:id/documents/:filename", (req, res) => {
     fs.createReadStream(filePath).pipe(res);
 });
 
-// POST — delete a document for an employee
 app.post("/employee/:id/documents/:filename/delete", (req, res) => {
     deleteEmployeeDocument(req.params.id, req.params.filename);
     res.redirect(`/employee/${req.params.id}/documents?success=Document deleted successfully`);

@@ -53,10 +53,8 @@ async function createNewEmployee(name, phoneNumber) {
  * @returns {Promise<Array>}
  */
 async function getShiftsForEmployee(id) {
-    // Sorting is handled by MongoDB in the persistence layer
     const shiftsForEmp = await persistence.getShiftsForEmployee(id);
 
-    // Flag morning shifts (before 12:00) using a plain for loop
     for (let i = 0; i < shiftsForEmp.length; i++) {
         shiftsForEmp[i].isMorning = shiftsForEmp[i].startTime < "12:00";
     }

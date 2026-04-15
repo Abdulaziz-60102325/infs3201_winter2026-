@@ -76,7 +76,6 @@ async function showEmployeeSchedule() {
     let empID = prompt("Enter the employee ID: ");
     let scheduleEntries = await business.getEmployeeSchedule(empID);
 
-    // Always print the header (even if no schedule entries exist)
     console.log("Date,Start Time,End Time");
     for (let entry of scheduleEntries) {
         console.log(`${entry.date},${entry.startTime},${entry.endTime}`);
