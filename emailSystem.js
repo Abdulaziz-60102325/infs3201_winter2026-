@@ -1,8 +1,7 @@
 'use strict';
 
 /**
- * Base function to simulate sending an email via console.log.
- * This interface matches what a real email system would require.
+
  * @param {string} to - Recipient email address
  * @param {string} subject - Email subject line
  * @param {string} body - Email body text
@@ -17,7 +16,6 @@ function sendEmail(to, subject, body) {
 }
 
 /**
- * Send a 2FA verification code to the user's email
  * @param {string} email - Recipient email address
  * @param {string} code - 6-digit verification code
  * @returns {void}
@@ -31,14 +29,13 @@ function send2FACode(email, code) {
 }
 
 /**
- * Send a suspicious activity alert after 3 failed login attempts
  * @param {string} email - Recipient email address
  * @returns {void}
  */
 function sendSuspiciousActivityAlert(email) {
     sendEmail(
         email,
-        "Security Alert: Suspicious Login Activity Detected",
+        "Security Alert: Login Activity Detected",
         "We detected multiple failed login attempts on your account.\nIf this was not you, please contact your administrator immediately."
     );
 }

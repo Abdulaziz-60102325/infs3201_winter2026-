@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 
-const uri = "mongodb+srv://qwwweeerrrt1212_db_user:01H6Lslrht3CcY0p@infs3201winter2026.v4ezdkt.mongodb.net/?appName=infs3201winter2026";
+const uri = "mongodb+srv://gpt521013_db_user:Hd5gMMr8Yy8w4tht@infs3201winter2026.mnlvpuw.mongodb.net/?appName=infs3201winter2026";
 const client = new MongoClient(uri, {
     tlsAllowInvalidCertificates: true
 });
@@ -14,7 +14,7 @@ let database;
 async function connectDB() {
     if (!database) {
         await client.connect();
-        database = client.db("infs3201_winter2026");
+        database = client.db("infs3201winter2026");
     }
     return database;
 }

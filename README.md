@@ -1,5 +1,4 @@
-# INFS3201 – Assignment 5
-## Employee Scheduling System
+### README.md file
 
 ### GitHub Repository
 https://github.com/abdulaziz5050/infs3201_winter2026-
@@ -24,10 +23,7 @@ The server starts on **http://localhost:3000**
 | admin    | admin123  | admin@example.com   |
 | user1    | pass1234  | user1@example.com   |
 
-> **Note to evaluator:** Passwords are stored as SHA-256 hashes in the `users` collection.
-> The **2FA code** is printed to the **server console** (terminal) — look for the `EMAIL SENT` block after login.
 
----
 
 ## Assignment 5 — New Features
 
@@ -54,14 +50,12 @@ The server starts on **http://localhost:3000**
 
 ## Features Implemented
 
-### Assignment 3
 - Landing page: list of employees with clickable links
 - Employee details page with sorted shifts
 - Morning shifts (before 12:00) highlighted in yellow on the `<td>` element
 - Edit employee form with server-side validation (trimming, name non-empty, phone format `dddd-dddd`)
 - PRG (Post-Redirect-Get) cycle on form submission
 
-### Assignment 4
 - **Database migration**: Embedded employee ObjectIds directly inside shift documents
 - **transform_db.js**: One-time migration script (Step 1–3 completed)
 - **A4_refactor_plan.txt**: Planning document committed before implementation
@@ -74,33 +68,7 @@ The server starts on **http://localhost:3000**
 - **Employee Photos**: Served from `/public/images/` — access requires active session
 - **Auth Middleware**: Protects all routes except `/login` and `/logout`
 
-### Assignment 5
 - **2FA Authentication**: 6-digit code via email (console), 3-minute expiry
 - **Account Lockout**: Suspicious activity alert at 3 failures, lock at 10 failures
 - **emailSystem.js**: Simulated email layer (console.log, but real interface)
 - **Employee Documents**: PDF upload, 2MB limit, 5-doc cap, protected serving route
-
----
-
-## Project Structure
-
-```
-├── app.js              # Express server + all routes
-├── business.js         # Business logic layer
-├── Persistence.js      # MongoDB + filesystem persistence layer
-├── emailSystem.js      # Email simulation system (A5)
-├── db.js               # MongoDB connection
-├── transform_db.js     # A4 one-time migration script
-├── views/
-│   ├── employees.handlebars
-│   ├── employeeDetails.handlebars
-│   ├── editEmployee.handlebars
-│   ├── twoFactor.handlebars      # A5 - 2FA code entry page
-│   ├── documents.handlebars      # A5 - Document manager page
-│   ├── login.handlebars
-│   └── layouts/main.handlebars
-├── public/
-│   └── images/         # Employee photos (auth-protected)
-└── uploads/
-    └── employee-docs/  # Employee PDF documents (auth-protected, in .gitignore)
-```

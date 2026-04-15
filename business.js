@@ -109,7 +109,6 @@ async function authenticateUser(username, password) {
 }
 
 /**
- * Generate a 6-digit 2FA code, store it with a 3-minute expiry, and email it to the user
  * @param {string} username
  * @returns {Promise<void>}
  */
@@ -117,7 +116,7 @@ async function initiate2FA(username) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes
 
-    await persistence.delete2FAToken(username); // Clear any existing token first
+    await persistence.delete2FAToken(username); 
     await persistence.create2FAToken(username, code, expiry);
 
     const user = await persistence.getUserByUsername(username);
@@ -125,7 +124,6 @@ async function initiate2FA(username) {
 }
 
 /**
- * Verify a 2FA code submitted by the user
  * @param {string} username
  * @param {string} code - User-submitted 6-digit code
  * @returns {Promise<'OK'|'INVALID'|'EXPIRED'>}
@@ -146,7 +144,6 @@ async function verify2FACode(username, code) {
 }
 
 /**
- * Get the list of document filenames for an employee
  * @param {string} employeeId
  * @returns {Array<string>}
  */
